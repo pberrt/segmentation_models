@@ -6,7 +6,7 @@ from . import base
 _KERAS_FRAMEWORK_NAME = 'keras'
 _TF_KERAS_FRAMEWORK_NAME = 'tf.keras'
 
-_DEFAULT_KERAS_FRAMEWORK = _KERAS_FRAMEWORK_NAME
+_DEFAULT_KERAS_FRAMEWORK = _TF_KERAS_FRAMEWORK_NAME
 _KERAS_FRAMEWORK = None
 _KERAS_BACKEND = None
 _KERAS_LAYERS = None
@@ -110,11 +110,13 @@ from . import utils
 # wrap segmentation models with framework modules
 from .backbones.backbones_factory import Backbones
 from .models.unet import Unet as _Unet
+from .models.myunet import myUnet as _myUnet
 from .models.pspnet import PSPNet as _PSPNet
 from .models.linknet import Linknet as _Linknet
 from .models.fpn import FPN as _FPN
 
 Unet = inject_global_submodules(_Unet)
+myUnet = inject_global_submodules(_myUnet)
 PSPNet = inject_global_submodules(_PSPNet)
 Linknet = inject_global_submodules(_Linknet)
 FPN = inject_global_submodules(_FPN)
