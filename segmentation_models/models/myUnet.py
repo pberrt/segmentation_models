@@ -1,8 +1,8 @@
 from keras_applications import get_submodules_from_kwargs
 
-from segmentation_models.models._common_blocks import Conv2dBn
-from segmentation_models.models._utils import freeze_model, filter_keras_submodules
-from segmentation_models.backbones.backbones_factory import Backbones
+from ._common_blocks import Conv2dBn
+from ._utils import freeze_model, filter_keras_submodules
+from ..backbones.backbones_factory import Backbones
 
 backend = None
 layers = None
@@ -117,7 +117,7 @@ def DecoderTransposeX2Block(filters, stage, use_batchnorm=False):
 #  Unet Decoder
 # ---------------------------------------------------------------------
 
-def build_unet(
+def build_myunet(
         backbone,
         decoder_block,
         skip_connection_layers,
@@ -127,26 +127,42 @@ def build_unet(
         activation='sigmoid',
         use_batchnorm=True,
 ):
-    input_ = backbone.input
-    x = backbone.output
+    # input_ = backbone.input
+    input_ = layers.Input(shape=(None, None, 1), name="input_gv")
+    # x = backbone.output
+    x = layers.Conv2D(3, (1, 1), name="conv_gv")(input_) # map N channels data to 3 channels
 
     # extract skip connections
-    skips = ([backbone.get_layer(name=i).output if isinstance(i, str)
-              else backbone.get_layer(index=i).output for i in skip_connection_layers])
+    l_list = []
+    skkips = [0]* len(skip_connection_layers)
+    for lay in backbone.layers[1:]:
+        # print(lay.name)
+        l_list.append(lay)
+        x = l_list[-1](x)
+        for i, s in enumerate(skip_connection_layers):
+            if lay.name==s:
+                # print(i,s)
+                skkips[i] = x
+
+    # skips = ([backbone.get_layer(name=i).output if isinstance(i, str)
+    #           else backbone.get_layer(index=i).output for i in skip_connection_layers])
 
     # add center block if previous operation was maxpooling (for vgg models)
     if isinstance(backbone.layers[-1], layers.MaxPooling2D):
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block1')(x)
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block2')(x)
 
+    # add dopout
+    dd = layers.Dropout(0.5)
+    x = dd(x)
+    
     # building decoder blocks
     for i in range(n_upsample_blocks):
 
-        if i < len(skips):
-            skip = skips[i]
+        if i < len(skkips):
+            skip = skkips[i]
         else:
             skip = None
-
         x = decoder_block(decoder_filters[i], stage=i, use_batchnorm=use_batchnorm)(x, skip)
 
     # model head (define number of output classes)
@@ -170,7 +186,7 @@ def build_unet(
 #  Unet Model
 # ---------------------------------------------------------------------
 
-def _Unet(
+def myUnet(
         backbone_name='vgg16',
         input_shape=(None, None, 3),
         classes=1,
@@ -235,7 +251,7 @@ def _Unet(
     if encoder_features == 'default':
         encoder_features = Backbones.get_feature_layers(backbone_name, n=4)
 
-    model = build_unet(
+    model = build_myunet(
         backbone=backbone,
         decoder_block=decoder_block,
         skip_connection_layers=encoder_features,
