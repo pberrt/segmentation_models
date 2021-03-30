@@ -153,8 +153,8 @@ def build_myunet(
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block2')(x)
 
     # add dopout
-    dd = layers.Dropout(0.5,training=True)
-    x = dd(x)
+    dd = layers.Dropout(0.5)
+    x = dd(x,training=True)
     
     # building decoder blocks
     for i in range(n_upsample_blocks):
