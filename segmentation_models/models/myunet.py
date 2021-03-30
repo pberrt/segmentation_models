@@ -153,7 +153,7 @@ def build_myunet(
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block2')(x)
 
     # add dopout
-    dd = layers.Dropout(0.5)
+    dd = layers.Dropout(0.5,training=True)
     x = dd(x)
     
     # building decoder blocks
