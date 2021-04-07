@@ -126,6 +126,7 @@ def build_myunet(
         classes=1,
         activation='sigmoid',
         use_batchnorm=True,
+        dropout_rate=0.5
 ):
     # input_ = backbone.input
     input_ = layers.Input(shape=(None, None, 1), name="input_gv")
@@ -153,7 +154,7 @@ def build_myunet(
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block2')(x)
 
     # add dopout
-    dd = layers.Dropout(0.5)
+    dd = layers.Dropout(dropout_rate)
     x = dd(x,training=True)
     
     # building decoder blocks
@@ -198,6 +199,7 @@ def myUnet(
         decoder_block_type='upsampling',
         decoder_filters=(256, 128, 64, 32, 16),
         decoder_use_batchnorm=True,
+        dropout_rate=0.5,
         **kwargs
 ):
     """ Unet_ is a fully convolution neural network for image semantic segmentation
@@ -212,7 +214,8 @@ def myUnet(
             (e.g. ``sigmoid``, ``softmax``, ``linear``).
         weights: optional, path to model weights.
         encoder_weights: one of ``None`` (random initialization), ``imagenet`` (pre-training on ImageNet).
-        encoder_freeze: if ``True`` set all layers of encoder (backbone model) as non-trainable.
+        encoder_freeze: if ``True`` set all layers of encoder (backbone model) as non-trainable. If a float, freezes
+            just that fraction of the encoder layers (starting with the earliest layers)
         encoder_features: a list of layer numbers or names starting from top of the model.
             Each of these layers will be concatenated with corresponding decoder block. If ``default`` is used
             layer names are taken from ``DEFAULT_SKIP_CONNECTIONS``.
@@ -222,6 +225,7 @@ def myUnet(
         decoder_filters: list of numbers of ``Conv2D`` layer filters in decoder blocks
         decoder_use_batchnorm: if ``True``, ``BatchNormalisation`` layer between ``Conv2D`` and ``Activation`` layers
             is used.
+        dropout_rate: Dropout fraction to apply at the center block, between encoder and decoder. Default is 0.5
     Returns:
         ``keras.models.Model``: **Unet**
     .. _Unet:
@@ -260,6 +264,7 @@ def myUnet(
         activation=activation,
         n_upsample_blocks=len(decoder_filters),
         use_batchnorm=decoder_use_batchnorm,
+        dropout_rate=dropout_rate
     )
 
     # lock encoder weights for fine-tuning
