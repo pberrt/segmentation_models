@@ -269,7 +269,8 @@ def myUnet(
 
     # lock encoder weights for fine-tuning
     if encoder_freeze:
-        freeze_model(backbone, **kwargs)
+        fraction = encoder_freeze if isinstance(encoder_freeze, float) else 1.0
+        freeze_model(backbone, fraction=fraction, **kwargs)
 
     # loading model weights
     if weights is not None:
